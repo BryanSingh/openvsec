@@ -1,0 +1,12 @@
+
+solo:
+
+  type: one-user-per-vm
+
+  users:
+    jeckroth: 192.168.123.100
+    foojohn: 192.168.123.101
+    foomary: 192.168.123.102
+
+foo:
+
