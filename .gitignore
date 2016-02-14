@@ -1,1 +1,3 @@
 .vagrant/
+theater_instances/
+*.swp

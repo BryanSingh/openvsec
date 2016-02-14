@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+
+import os
+import yaml
+import argparse
+
+def clone_theater_for_operation(starting_dir, theater, operation, user_or_group):
+    if os.path.exists("%s/operations/%s/theater_instances/%s" % (starting_dir, operation, user_or_group)):
+        raise Exception("%s/operations/%s/theater_instances/%s already exists, but trying to clone a new instance!" % (starting_dir, operation, user_or_group))
+    os.system("mkdir -p %s/operations/%s/theater_instances/%s" % (starting_dir, operation, user_or_group))
+    os.system("ln -s %s/theaters/%s/* %s/operations/%s/theater_instances/%s" % (starting_dir, theater, starting_dir, operation, user_or_group))
+
+def remove_theater_for_operation(starting_dir, theater, operation, user_or_group):
+    os.system("rm -rf %s/operations/%s/theater_instances/%s" % (starting_dir, operation, user_or_group))
+
+def tunnel_up(user, tun_num, base_ip):
+    server_ip = "192.168.254.99"
+    remote_ip = "192.168.254.%d" % (100+tun_num)
+    vm_ip = "%s.%d" % (base_ip, 100+tun_num) # base_ip should have the form: "192.168.121" or similar
+    print "Enabling tunnel access for %s (server tunnel number %d, server ip %s, user ip %s, vm base ip %s, vm ip %s)" % (user, tun_num, server_ip, remote_ip, base_ip, vm_ip)
+    os.system("sudo tunctl -u %s -t tun%d" % (user, tun_num))
+    os.system("sudo ip link set tun%d up" % tun_num)
+    os.system("sudo ip addr add %s/32 peer %s dev tun%d" % (server_ip, remote_ip, tun_num))
+    os.system("sudo iptables -I FORWARD 1 -d %s/32 -i tun%d -j ACCEPT" % (vm_ip, tun_num))
+    
+def tunnel_down(user, tun_num, base_ip):
+    vm_ip = "%s.%d" % (base_ip, 100+tun_num) # base_ip should have the form: "192.168.121" or similar
+    print "Disabling tunnel access for %s (server tunnel number %d)" % (user, tun_num)
+    os.system("sudo ip link del tun%d" % tun_num)
+    os.system("sudo iptables -D FORWARD -d %s/32 -i tun%d -j ACCEPT" % (vm_ip, tun_num))
+
+parser = argparse.ArgumentParser(description="Manage VMs that are built for specific operations")
+parser.add_argument('operation', help='operation to act on')
+parser.add_argument('action', help='action to perform: build/enable/disable/suspend/resume/destroy/status')
+
+args = parser.parse_args()
+
+if args.action not in ['build', 'enable', 'disable', 'suspend', 'resume', 'destroy', 'status']:
+    print "!! Invalid action:", args.action
+    print
+    parser.print_help()
+    exit(1)
+
+with open('roles/sample-roles.yml', 'r') as rolefile:
+    roles = yaml.load(rolefile)
+
+if args.operation not in roles['operations']:
+    print "!! Invalid role. These operations were found:", ', '.join(roles['operations'])
+    print
+    exit(1)
+
+operation = args.operation
+operation_map = roles['operations'][operation]
+
+starting_dir = os.getcwd()
+
+if operation_map['type'] == 'one-user-per-vm':
+    for user in operation_map['users']:
+        user_tunnel_num = roles['tunnels'][user]
+        os.environ['OPENVSEC_USERNAME'] = user
+        os.environ['OPENVSEC_IP'] = "%s.%d" % (operation_map['base_ip'], 100 + user_tunnel_num)
+        if args.action == "build":
+            clone_theater_for_operation(starting_dir, operation_map['theater'], operation, user)
+            os.chdir("%s/operations/%s/theater_instances/%s" % (starting_dir, operation, user))
+            os.system("vagrant up")
+        else:
+            if not os.path.exists("%s/operations/%s/theater_instances/%s" % (starting_dir, operation, user)):
+                raise Exception("%s/operations/%s/theater_instances/%s does not exist, cannot perform action!" % (starting_dir, operation, user))
+            os.chdir("%s/operations/%s/theater_instances/%s" % (starting_dir, operation, user))
+
+            if args.action == "enable":
+                tunnel_up(user, user_tunnel_num, operation_map['base_ip'])
+            elif args.action == "disable":
+                tunnel_down(user, user_tunnel_num, operation_map['base_ip'])
+            elif args.action == "suspend":
+                os.system("vagrant suspend")
+            elif args.action == "resume":
+                os.system("vagrant resume")
+            elif args.action == "destroy":
+                os.system("vagrant destroy")
+                remove_theater_for_operation(operation_map['theater'], operation, user)
+            elif args.action == "status":
+                os.system("vagrant status")
+# elif roles['theaters'][args.theater]['type'] == 'temas':
+#     team_idx = 0
+#     for team in roles['theaters'][args.theater]['teams']:
+#         team_users = roles['theaters'][args.theater]['teams'][team]
+#         os.environ['OPENVSEC_USERNAME'] = team
+#         os.environ['OPENVSEC_IP'] = "%s.%d" % (roles['theaters'][args.theater]['base_ip'], 100 + team_idx)
+#         if args.action == "up":
+#             call(["vagrant", "up"])
+#             tunnel_up(user, roles['tunnels'][user], roles['theaters'][args.theater]['base_ip'])
+#         elif args.action == "down":
+#             call(["vagrant", "halt"])
+#             tunnel_down(roles['tunnels'][user])
+#         elif args.action == "destroy":
+#             call(["vagrant", "destroy"])
+#             tunnel_down(roles['tunnels'][user])
+#         elif args.action == "status":
+#             call(["vagrant", "status"])
+#         team_idx += 1
+
+
+
