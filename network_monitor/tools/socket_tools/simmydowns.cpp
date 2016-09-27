@@ -1,9 +1,9 @@
 #include <iostream>
-#include <stdarg.h>
-#include <tools/pid.h>
-#include <tools/port_scanner.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #define PORT 2222
+#define FILE_PATH "../some_path"
 
 using namespace std;
 
@@ -14,5 +14,6 @@ class commandline
 
 int main()
 {
-
+    WIN32_FIND_DATA data;
+    HANDLE h = FindFirstFile(FILE_PATH), &data;
 }
