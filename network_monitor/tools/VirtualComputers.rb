@@ -1,4 +1,9 @@
-# Enummeration for the Virtual Computers
+#!/usr/bin/ruby
+# Enumeration for the Virtual Computers
+
+BEGIN {
+    puts ("System Booting Up ...")
+}
 module Enum
   Enumerable
 
@@ -50,15 +55,27 @@ end
 end
 
 # VM's should be in the StarWars name Convention
+require 'io/console'
 class VirtualComputers
+
+    LOCALHOST = 127.0.0.1
     virtual_machine = {'vmName' => nil, 'internetProtocol' => nil, 'created_at' => nil}
+    sample__names = ['Anikin', 'ObiWan', 'JarJar']
 
-    def initialize(name)
+    # def initialize(name)
+    # end
 
+    def openfile()
+        @vMFileLog = File.open("vmware.log", "r") do |vMFileLog|
+            if vMFileLog
+                # Will show the first 20 characters of the file
+                content = vMFileLog.sysread(20)
+                puts content
+            end
     end
 
     #Grab all the virtual machine's with the specified regular expression
-    def getVmFileNames()
+    def getvmfilenames()
         # Filename with 10 characters
         name_regex = ('[A-Za-z0-10_]{2}(?:[A-Za-z0-9_]{2,})?')
 
@@ -67,6 +84,19 @@ class VirtualComputers
       end
     end
 
-    def isVmNameValid?()
+    def isvmnamevalid?()
+        fileName = VirtualComputers.new
+        if fileName == true
+            puts 'Go'
+        end
     end
+
+    def determineNumberOfVMsRunning()
+        @numberVM = sample__names.length
+    end
+
+    def permutatevms()
+
+    end
+end
 end
