@@ -26,10 +26,10 @@
 
 long smp_num_cpus;     /* number of CPUs */
 
-#define BAD_OPEN_MESSAGE					\
-"Error: /proc must be mounted\n"				\
-"  To mount /proc at boot you need an /etc/fstab line like:\n"	\
-"      /proc   /proc   proc    defaults\n"			\
+#define BAD_OPEN_MESSAGE                    \
+"Error: /proc must be mounted\n"                \
+"  To mount /proc at boot you need an /etc/fstab line like:\n"  \
+"      /proc   /proc   proc    defaults\n"          \
 "  In the meantime, run \"mount /proc /proc -t proc\"\n"
 
 #define STAT_FILE    "/proc/stat"
@@ -51,20 +51,20 @@ static char buf[2048];
  * that successive calls to the functions are more efficient.
  * It also reads the current contents of the file into the global buf.
  */
-#define FILE_TO_BUF(filename, fd) do{				\
-    static int local_n;						\
-    if (fd == -1 && (fd = open(filename, O_RDONLY)) == -1) {	\
-	fputs(BAD_OPEN_MESSAGE, stderr);			\
-	fflush(NULL);						\
-	_exit(102);						\
-    }								\
-    lseek(fd, 0L, SEEK_SET);					\
-    if ((local_n = read(fd, buf, sizeof buf - 1)) < 0) {	\
-	perror(filename);					\
-	fflush(NULL);						\
-	_exit(103);						\
-    }								\
-    buf[local_n] = '\0';					\
+#define FILE_TO_BUF(filename, fd) do{               \
+    static int local_n;                     \
+    if (fd == -1 && (fd = open(filename, O_RDONLY)) == -1) {    \
+    fputs(BAD_OPEN_MESSAGE, stderr);            \
+    fflush(NULL);                       \
+    _exit(102);                     \
+    }                               \
+    lseek(fd, 0L, SEEK_SET);                    \
+    if ((local_n = read(fd, buf, sizeof buf - 1)) < 0) {    \
+    perror(filename);                   \
+    fflush(NULL);                       \
+    _exit(103);                     \
+    }                               \
+    buf[local_n] = '\0';                    \
 }while(0)
 
 /* evals 'x' twice */
@@ -82,12 +82,12 @@ int uptime(double *restrict uptime_secs, double *restrict idle_secs) {
     if (sscanf(buf, "%lf %lf", &up, &idle) < 2) {
         setlocale(LC_NUMERIC,savelocale);
         fputs("bad data in " UPTIME_FILE "\n", stderr);
-	    return 0;
+        return 0;
     }
     setlocale(LC_NUMERIC,savelocale);
     SET_IF_DESIRED(uptime_secs, up);
     SET_IF_DESIRED(idle_secs, idle);
-    return up;	/* assume never be zero seconds in practice */
+    return up;  /* assume never be zero seconds in practice */
 }
 
 /***********************************************************************
@@ -222,7 +222,7 @@ static void init_libproc(void){
   smp_num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
   if(smp_num_cpus<1) smp_num_cpus=1; /* SPARC glibc is buggy */
 
-  if(linux_version_code > LINUX_VERSION(2, 4, 0)){ 
+  if(linux_version_code > LINUX_VERSION(2, 4, 0)){
     Hertz = find_elf_note(AT_CLKTCK);
     if(Hertz!=NOTE_NOT_FOUND) return;
     fputs("2.4+ kernel w/o ELF notes? -- report this\n", stderr);
@@ -256,7 +256,7 @@ void eight_cpu_numbers(double *restrict uret, double *restrict nret, double *res
     new_y = 0;
     tmp_z = 0.0;
     new_z = 0;
- 
+
     FILE_TO_BUF(STAT_FILE,stat_fd);
     sscanf(buf, "cpu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu", &new_u, &new_n, &new_s, &new_i, &new_w, &new_x, &new_y, &new_z);
     ticks_past = (new_u+new_n+new_s+new_i+new_w+new_x+new_y+new_z)-(old_u+old_n+old_s+old_i+old_w+old_x+old_y+old_z);
@@ -304,13 +304,13 @@ void eight_cpu_numbers(double *restrict uret, double *restrict nret, double *res
 void loadavg(double *restrict av1, double *restrict av5, double *restrict av15) {
     double avg_1=0, avg_5=0, avg_15=0;
     char *restrict savelocale;
-    
+
     FILE_TO_BUF(LOADAVG_FILE,loadavg_fd);
     savelocale = setlocale(LC_NUMERIC, NULL);
     setlocale(LC_NUMERIC, "C");
     if (sscanf(buf, "%lf %lf %lf", &avg_1, &avg_5, &avg_15) < 3) {
-	fputs("bad data in " LOADAVG_FILE "\n", stderr);
-	exit(1);
+    fputs("bad data in " LOADAVG_FILE "\n", stderr);
+    exit(1);
     }
     setlocale(LC_NUMERIC, savelocale);
     SET_IF_DESIRED(av1,  avg_1);
@@ -371,10 +371,10 @@ static void getrunners(unsigned int *restrict running, unsigned int *restrict bl
 /***********************************************************************/
 
 void getstat(jiff *restrict cuse, jiff *restrict cice, jiff *restrict csys, jiff *restrict cide, jiff *restrict ciow, jiff *restrict cxxx, jiff *restrict cyyy, jiff *restrict czzz,
-	     unsigned long *restrict pin, unsigned long *restrict pout, unsigned long *restrict s_in, unsigned long *restrict sout,
-	     unsigned *restrict intr, unsigned *restrict ctxt,
-	     unsigned int *restrict running, unsigned int *restrict blocked,
-	     unsigned int *restrict btime, unsigned int *restrict processes) {
+         unsigned long *restrict pin, unsigned long *restrict pout, unsigned long *restrict s_in, unsigned long *restrict sout,
+         unsigned *restrict intr, unsigned *restrict ctxt,
+         unsigned int *restrict running, unsigned int *restrict blocked,
+         unsigned int *restrict btime, unsigned int *restrict processes) {
   static int fd;
   unsigned long long llbuf = 0;
   int need_vmstat_file = 0;
@@ -389,7 +389,7 @@ void getstat(jiff *restrict cuse, jiff *restrict cice, jiff *restrict csys, jiff
     if(fd == -1) crash("/proc/stat");
   }
   read(fd,buff,BUFFSIZE-1);
-  *intr = 0; 
+  *intr = 0;
   *ciow = 0;  /* not separated out until the 2.5.41 kernel */
   *cxxx = 0;  /* not separated out until the 2.6.0-test4 kernel */
   *cyyy = 0;  /* not separated out until the 2.6.0-test4 kernel */
@@ -661,21 +661,21 @@ unsigned long vm_pageoutrun;  // times kswapd ran page reclaim
 unsigned long vm_allocstall; // times a page allocator ran direct reclaim
 unsigned long vm_pgrotated; // pages rotated to the tail of the LRU for immediate reclaim
 // seen on a 2.6.8-rc1 kernel, apparently replacing old fields
-static unsigned long vm_pgalloc_dma;          // 
-static unsigned long vm_pgalloc_high;         // 
-static unsigned long vm_pgalloc_normal;       // 
-static unsigned long vm_pgrefill_dma;         // 
-static unsigned long vm_pgrefill_high;        // 
-static unsigned long vm_pgrefill_normal;      // 
-static unsigned long vm_pgscan_direct_dma;    // 
-static unsigned long vm_pgscan_direct_high;   // 
-static unsigned long vm_pgscan_direct_normal; // 
-static unsigned long vm_pgscan_kswapd_dma;    // 
-static unsigned long vm_pgscan_kswapd_high;   // 
-static unsigned long vm_pgscan_kswapd_normal; // 
-static unsigned long vm_pgsteal_dma;          // 
-static unsigned long vm_pgsteal_high;         // 
-static unsigned long vm_pgsteal_normal;       // 
+static unsigned long vm_pgalloc_dma;          //
+static unsigned long vm_pgalloc_high;         //
+static unsigned long vm_pgalloc_normal;       //
+static unsigned long vm_pgrefill_dma;         //
+static unsigned long vm_pgrefill_high;        //
+static unsigned long vm_pgrefill_normal;      //
+static unsigned long vm_pgscan_direct_dma;    //
+static unsigned long vm_pgscan_direct_high;   //
+static unsigned long vm_pgscan_direct_normal; //
+static unsigned long vm_pgscan_kswapd_dma;    //
+static unsigned long vm_pgscan_kswapd_high;   //
+static unsigned long vm_pgscan_kswapd_normal; //
+static unsigned long vm_pgsteal_dma;          //
+static unsigned long vm_pgsteal_high;         //
+static unsigned long vm_pgsteal_normal;       //
 // seen on a 2.6.8-rc1 kernel
 static unsigned long vm_kswapd_inodesteal;    //
 static unsigned long vm_nr_unstable;          //
@@ -787,7 +787,7 @@ unsigned int getpartitions_num(struct disk_stat *disks, int ndisks){
   int partitions=0;
 
   for (i=0;i<ndisks;i++){
-	partitions+=disks[i].partitions;
+    partitions+=disks[i].partitions;
   }
   return partitions;
 
@@ -804,7 +804,7 @@ unsigned int getdiskstat(struct disk_stat **disks, struct partition_stat **parti
 
   *disks = NULL;
   *partitions = NULL;
-  buff[BUFFSIZE-1] = 0; 
+  buff[BUFFSIZE-1] = 0;
   fd = fopen("/proc/diskstats", "rb");
   if(!fd) crash("/proc/diskstats");
 
@@ -847,7 +847,7 @@ unsigned int getdiskstat(struct disk_stat **disks, struct partition_stat **parti
         &(*partitions)[cPartition].requested_writes
       );
       (*partitions)[cPartition++].parent_disk = cDisk-1;
-      (*disks)[cDisk-1].partitions++;	
+      (*disks)[cDisk-1].partitions++;
     }
   }
 
@@ -860,7 +860,7 @@ unsigned int getdiskstat(struct disk_stat **disks, struct partition_stat **parti
 unsigned int getslabinfo (struct slab_cache **slab){
   FILE* fd;
   int cSlab = 0;
-  buff[BUFFSIZE-1] = 0; 
+  buff[BUFFSIZE-1] = 0;
   *slab = NULL;
   fd = fopen("/proc/slabinfo", "rb");
   if(!fd) crash("/proc/slabinfo");
@@ -910,3 +910,4 @@ unsigned get_pid_digits(void){
 out:
   return ret;
 }
+
