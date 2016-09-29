@@ -22,10 +22,14 @@ The goal of this project is to create an Artificial Intelligence - Deep Learning
 ## How to Setup
 
 ## Server Architecture
+
 ### Hypervisor
 * Ansible
+
+
 ### Virtualization
 * Vagrant
+
 ### Networking Mintor Tools
 * BRO
 * pFSense
