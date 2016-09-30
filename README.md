@@ -24,7 +24,7 @@ The goal of this project is to create an Artificial Intelligence - Deep Learning
 ## Server Architecture
 
 ### Hypervisor
-* Ansible
+* 
 
 
 ### Virtualization
