@@ -7,7 +7,7 @@ require 'ipaddr'
     # Local Host is being used as an example
     #'127.0.0.1'split('.').collect(&:to_i).pack('C*').unpack('N').first
 
-class traffic
+class traffic < VirtualComputers
     # Being stored as an array: ["127", "0", "0", "1"]
     LOCALHOST = '127.0.0.1'.split('.')
 
